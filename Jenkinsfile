@@ -1,51 +1,44 @@
 pipeline {
     agent any
 
-    parameters {
-        string(name: 'PHRASE', defaultValue: 'Привет, попугай!', description: 'Фраза для попугая')
-    }
-
     environment {
-        IMAGE_NAME = 'parrot-image'
-        DOCKER_REGISTRY = 'your-docker-registry' // Укажи свой Docker Registry, если используешь приватный реестр
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials') // Здесь должно быть имя ваших Jenkins credentials
     }
 
     stages {
-        stage('Clone from Git') {
+        stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/VegetaCK/Jens.git'
+                checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Собираем Docker-образ
-                    sh "docker build -t ${env.IMAGE_NAME} ."
+                    // Собираем Docker образ
+                    sh 'docker build -t vegetack/parrot-image .'
                 }
             }
         }
 
-        stage('Run Python script in Docker') {
+        stage('Login to Docker Hub') {
             steps {
                 script {
-                    // Запускаем контейнер с образом, передавая параметр PHRASE
-                    sh "docker run --rm ${env.IMAGE_NAME} ${params.PHRASE}"
+                    // Логинимся в Docker Hub с помощью credentials
+                    sh 'echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u vegetack --password-stdin'
                 }
             }
         }
 
         stage('Push Docker Image') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
-                    // Пушим образ в Docker-реестр
-                    sh "docker tag ${env.IMAGE_NAME} ${env.DOCKER_REGISTRY}/${env.IMAGE_NAME}:latest"
-                    sh "docker push ${env.DOCKER_REGISTRY}/${env.IMAGE_NAME}:latest"
+                    // Отправляем образ на Docker Hub
+                    sh 'docker push vegetack/parrot-image'
                 }
             }
         }
     }
-}
+
+    post {
+        always {
