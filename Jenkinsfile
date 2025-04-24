@@ -28,3 +28,22 @@ pipeline {
                     sh 'echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u vegetack --password-stdin'
                 }
             }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    // Отправляем образ на Docker Hub
+                    sh 'docker push vegetack/parrot-image'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Опционально: очищаем образ после завершения сборки
+            sh 'docker rmi vegetack/parrot-image || true'
+        }
+    }
+}
