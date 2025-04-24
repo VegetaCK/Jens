@@ -1,6 +1,6 @@
+phrase = "Привет, попугай!"  # жестко заданное значение
+
 while True:
-    phrase = input("Скажи что-нибудь: ")
-    
     if phrase.lower() in ["выход", "exit", "quit"]:
         print("Пока")
         break
